@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" no-cache>
+    <meta http-equiv="Expires" content="0">
+    <title>UK Weather Information Broadcast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css">
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1A202C, #2D3748);
+            color: #F7FAFC;
+            overflow-x: hidden;
+        }
+
+        /* Card styles */
+        .card {
+            background: #2D3748;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* Audio player styles */
+        .audio-player {
+            width: auto;
+            min-width: 320px;
+            margin: auto;
+        }
+
+        /* Server indicator and title styles */
+        .audio-server-indicator {
+            font-size: 12px;
+            color: #CBD5E0;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .weather-icon i {
+            font-size: 45px;
+            vertical-align: middle;
+            margin-right: 10px; /* Added margin to separate icon and text */
+        }
+
+        .audio-title {
+            margin: 0;
+            font-size: 24px;
+            color: #E2E8F0;
+            margin-bottom: 20px;
+        }
+
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 25px;
+        }
+
+        .live-indicator {
+            height: 10px;
+            width: 10px;
+            background-color: #E53E3E;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 15px;
+            vertical-align: middle;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(229, 62, 62, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+            }
+        }
+
+        .green-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #00ff3c;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            vertical-align: middle;
+            animation: green-pulse 2s infinite;
+        }
+
+        @keyframes green-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+            }
+        }
+
+        .play-pause-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100px;
+            height: 40px;
+            color: #FFFFFF;
+            font-size: 16px;
+            background-color: #3182CE;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+
+        .play-pause-btn:hover {
+            background-color: #2B6CB0;
+        }
+
+        .broadcasting-info {
+            font-size: 14px;
+            text-align: center;
+            color: #E2E8F0;
+            margin-top: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px 0;
+            color: #CBD5E0;
+        }
+
+        .table-border-wrapper {
+            border: 2px solid #2D3748;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background-color: #2D3748;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #4A5568;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        th {
+            background-color: #2D3748;
+            color: #E2E8F0;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="card audio-player">
+        <div class="audio-server-indicator">
+            <span class="green-dot"></span>WIBDATA01
+        </div>
+        <h2 class="audio-title"><span class="live-indicator"></span>UK Weather Information Broadcast</h2>
+        <audio src="https://s1.parox.net/uk" preload="none" class="audio"></audio>
+        <div class="audio-controls">
+            <button class="play-pause-btn" onclick="togglePlayPause(this)">&#9658; Play</button>
+        </div>
+        <div class="broadcasting-info" id="current-timeslot">Current Timeslot: Fetching...</div>
+    </div>
+
+    <div class="table-border-wrapper">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timeslot 1 - HH:00 - HH:07 | HH:30 - HH:37</th>
+                        <th>Timeslot 2 - HH:07 - HH:15 | HH:37 - HH:45</th>
+                        <th>Timeslot 3 - HH:15 - HH:22 | HH:45 - HH:52</th>
+                        <th>Timeslot 4 - HH:22 - HH:30 | HH:52 - HH:00</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span id="weather-london" class="weather-icon"></span> London</td>
+                        <td><span id="weather-bristol" class="weather-icon"></span> Bristol</td>
+                        <td><span id="weather-manchester" class="weather-icon"></span> Manchester</td>
+                        <td><span id="weather-glasgow" class="weather-icon"></span> Glasgow</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-brighton" class="weather-icon"></span> Brighton</td>
+                        <td><span id="weather-cardiff" class="weather-icon"></span> Cardiff</td>
+                        <td><span id="weather-liverpool" class="weather-icon"></span> Liverpool</td>
+                        <td><span id="weather-edinburgh" class="weather-icon"></span> Edinburgh</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-cambridge" class="weather-icon"></span> Cambridge</td>
+                        <td><span id="weather-exeter" class="weather-icon"></span> Exeter</td>
+                        <td><span id="weather-leeds" class="weather-icon"></span> Leeds</td>
+                        <td><span id="weather-aberdeen" class="weather-icon"></span> Aberdeen</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-oxford" class="weather-icon"></span> Oxford</td>
+                        <td><span id="weather-plymouth" class="weather-icon"></span> Plymouth</td>
+                        <td><span id="weather-sheffield" class="weather-icon"></span> Sheffield</td>
+                        <td><span id="weather-inverness" class="weather-icon"></span> Inverness</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-southampton" class="weather-icon"></span> Southampton</td>
+                        <td><span id="weather-swansea" class="weather-icon"></span> Swansea</td>
+                        <td><span id="weather-nottingham" class="weather-icon"></span> Nottingham</td>
+                        <td><span id="weather-dundee" class="weather-icon"></span> Dundee</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-bournemouth" class="weather-icon"></span> Bournemouth</td>
+                        <td><span id="weather-newport" class="weather-icon"></span> Newport</td>
+                        <td><span id="weather-leicester" class="weather-icon"></span> Leicester</td>
+                        <td><span id="weather-stirling" class="weather-icon"></span> Stirling</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-portsmouth" class="weather-icon"></span> Portsmouth</td>
+                        <td><span id="weather-bath" class="weather-icon"></span> Bath</td>
+                        <td><span id="weather-stoke-on-trent" class="weather-icon"></span> Stoke-on-Trent</td>
+                        <td><span id="weather-perth" class="weather-icon"></span> Perth</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-weymouth" class="weather-icon"></span> Weymouth</td>
+                        <td><span id="weather-gloucester" class="weather-icon"></span> Gloucester</td>
+                        <td><span id="weather-york" class="weather-icon"></span> York</td>
+                        <td><span id="weather-kilmarnock" class="weather-icon"></span> Kilmarnock</td>
+                    </tr>
+                    <tr>
+                        <td><span id="weather-reading" class="weather-icon"></span> Reading</td>
+                        <td><span id="weather-hereford" class="weather-icon"></span> Hereford</td>
+                        <td><span id="weather-derby" class="weather-icon"></span> Derby</td>
+                        <td><span id="weather-falkirk" class="weather-icon"></span> Falkirk</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    function togglePlayPause(button) {
+        const audio = button.parentElement.previousElementSibling;
+        function playAudio() {
+            audio.play().then(() => {
+                button.innerHTML = '&#10074;&#10074; Pause';
+            }).catch((error) => {
+                console.error('Playback failed, trying to reconnect...', error);
+                setTimeout(playAudio, 5000);
+            });
+        }
+        if (audio.paused) {
+            playAudio();
+        } else {
+            audio.pause();
+            button.innerHTML = '&#9658; Play';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateWeatherIcons();
+    });
+
+    setInterval(updateWeatherIcons, 300000);
+
+    async function updateWeatherIcons() {
+        const cities = {
+            'London': { lat: 51.5074, lon: -0.1278 },
+            'Bristol': { lat: 51.4545, lon: -2.5879 },
+            'Manchester': { lat: 53.4808, lon: -2.2426 },
+            'Glasgow': { lat: 55.8642, lon: -4.2518 },
+            'Brighton': { lat: 50.8225, lon: -0.1372 },
+            'Cardiff': { lat: 51.4816, lon: -3.1791 },
+            'Liverpool': { lat: 53.4084, lon: -2.9916 },
+            'Edinburgh': { lat: 55.9533, lon: -3.1883 },
+            'Cambridge': { lat: 52.2053, lon: 0.1218 },
+            'Exeter': { lat: 50.7184, lon: -3.5339 },
+            'Leeds': { lat: 53.8008, lon: -1.5491 },
+            'Aberdeen': { lat: 57.1497, lon: -2.0943 },
+            'Oxford': { lat: 51.7520, lon: -1.2577 },
+            'Plymouth': { lat: 50.3755, lon: -4.1427 },
+            'Sheffield': { lat: 53.3811, lon: -1.4701 },
+            'Inverness': { lat: 57.4778, lon: -4.2247 },
+            'Southampton': { lat: 50.9097, lon: -1.4044 },
+            'Swansea': { lat: 51.6214, lon: -3.9436 },
+            'Nottingham': { lat: 52.9548, lon: -1.1581 },
+            'Dundee': { lat: 56.4620, lon: -2.9707 },
+            'Bournemouth': { lat: 50.7208, lon: -1.8795 },
+            'Newport': { lat: 51.5842, lon: -2.9977 },
+            'Leicester': { lat: 52.6369, lon: -1.1398 },
+            'Stirling': { lat: 56.1165, lon: -3.9369 },
+            'Portsmouth': { lat: 50.8198, lon: -1.0880 },
+            'Bath': { lat: 51.3758, lon: -2.3599 },
+            'Stoke-on-Trent': { lat: 53.0027, lon: -2.1794 },
+            'Perth': { lat: 56.3952, lon: -3.4314 },
+            'Weymouth': { lat: 50.6144, lon: -2.4576 },
+            'Gloucester': { lat: 51.8642, lon: -2.2382 },
+            'York': { lat: 53.9590, lon: -1.0815 },
+            'Kilmarnock': { lat: 55.6117, lon: -4.4968 },
+            'Reading': { lat: 51.4543, lon: -0.9781 },
+            'Hereford': { lat: 52.0567, lon: -2.7150 },
+            'Derby': { lat: 52.9228, lon: -1.4766 },
+            'Falkirk': { lat: 56.0011, lon: -3.7830 }
+        };
+
+        Object.entries(cities).forEach(async ([city, coords]) => {
+            const apiURL = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true`;
+            try {
+                const response = await fetch(apiURL);
+                const data = await response.json();
+                const iconClass = getWeatherIconClass(data.current_weather.weathercode);
+                document.getElementById(`weather-${city.toLowerCase()}`).innerHTML = `<i class="wi ${iconClass}"></i>`;
+            } catch (error) {
+                console.error(`Failed to fetch weather data for ${city}:`, error);
+            }
+        });
+    }
+
+    function getWeatherIconClass(weatherCode) {
+        const codeMap = {
+            '0': 'wi-day-sunny',
+            '1': 'wi-day-sunny',
+            '2': 'wi-day-cloudy',
+            '3': 'wi-cloudy',
+            '45': 'wi-fog',
+            '48': 'wi-fog',
+            '51': 'wi-rain',
+            '53': 'wi-rain',
+            '55': 'wi-rain',
+            '56': 'wi-rain-mix',
+            '57': 'wi-rain-mix',
+            '61': 'wi-rain',
+            '63': 'wi-rain',
+            '65': 'wi-rain',
+            '66': 'wi-rain-mix',
+            '67': 'wi-rain-mix',
+            '71': 'wi-snow',
+            '73': 'wi-snow',
+            '75': 'wi-snow',
+            '77': 'wi-snow',
+            '80': 'wi-showers',
+            '81': 'wi-showers',
+            '82': 'wi-showers',
+            '85': 'wi-snow',
+            '86': 'wi-snow',
+            '95': 'wi-thunderstorm',
+            '96': 'wi-storm-showers',
+            '99': 'wi-thunderstorm'
+        };
+        return codeMap[weatherCode] || 'wi-day-sunny';
+    }
+
+    function updateCurrentTimeslot() {
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        const totalMinutes = hour * 60 + minute;
+        let timeslot;
+
+        if ((minute >= 0 && minute < 7) || (minute >= 30 && minute < 37)) {
+            timeslot = 1;
+        } else if ((minute >= 7 && minute < 15) || (minute >= 37 && minute < 45)) {
+            timeslot = 2;
+        } else if ((minute >= 15 && minute < 22) || (minute >= 45 && minute < 52)) {
+            timeslot = 3;
+        } else {
+            timeslot = 4;
+        }
+
+        document.getElementById('current-timeslot').innerText = 'Current Timeslot: ' + timeslot;
+    }
+
+    updateCurrentTimeslot();
+    setInterval(updateCurrentTimeslot, 60000);
+    </script>
+</body>
+</html>
