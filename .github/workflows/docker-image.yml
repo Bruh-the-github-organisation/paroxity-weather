@@ -16,5 +16,5 @@ jobs:
     - name: Build and push Docker image
       run: |
         REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-        docker build . --file Dockerfile -t ghcr.io/$REPO_LOWER:dev-build-${{ github.run_number }}
+        docker build . --file Dockerfile -t ghcr.io/$REPO_LOWER/dev-build:${{ github.run_number }}
         docker push ghcr.io/$REPO_LOWER:dev-build-${{ github.run_number }}
