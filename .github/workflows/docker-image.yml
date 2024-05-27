@@ -1,9 +1,7 @@
 name: Docker Image CI
-
 on:
   push:
     branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest #Currently using hosted but will switch to self-hosted runner when repo is private
